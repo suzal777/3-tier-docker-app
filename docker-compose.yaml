@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  database:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app_network
+
+  backend:
+    build: ./backend
+    container_name: backend_app
+    environment:
+      DB_HOST: database
+      DB_NAME: appdb
+      DB_USER: appuser
+      DB_PASS: secret
+    depends_on:
+      - database
+    ports:
+      - "5000:5000"
+    networks:
+      - app_network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_app
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+volumes:
+  db_data:
+
+networks:
+  app_network:
